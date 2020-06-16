@@ -18,6 +18,12 @@ Code folder structure of all components have similar structure. Under main packa
 * responseDTO : response objects will be defined in this folder
 * service : service layer of application
 
+### Diagram
+Solution diagram, sequence diagram and ERD diagram are placed in diagram folder
+
+This is full solution for icommerce application with various services: authentication service, payment service, product service, cart service, audit server, ... In the context of demo, 3 services are picked up to develop. Besides that there're all ERD diagrams for all services. However in demo context, the DB of service is more simple.
+Additionally, there're 3 sequence diagrams for 3 implemented flows: get all products, add product to cart, get cart
+
 ## Used Libraries
 * Spring Boot
 * Spring Cloud Netflix - Eureka
