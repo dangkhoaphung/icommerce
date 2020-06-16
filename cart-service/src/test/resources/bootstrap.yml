@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: cart-service
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+  datasource:
+    url: jdbc:h2:mem:cart_db
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa.database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/registry/eureka/
+
+server:
+  port: 6011
+  servlet:
+    context-path: /cart
+logging:
+  file.max-history: 5
+  level:
+    root: INFO
+  file:
+    name: ${logging.dir}/${spring.application.name}.log
+  dir: ./
