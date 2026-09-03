@@ -1,0 +1,20 @@
+name: OpenClaw PR Review (Local)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: self-hosted # <-- Điểm mấu chốt ở đây
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Chạy OpenClaw Review
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENCLAW_PAT }} 
+          # Không cần truyền LLM_API_KEY ở đây nữa, OpenClaw sẽ tự lấy từ máy bạn
+        run: |
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          openclaw review "$PR_URL"
