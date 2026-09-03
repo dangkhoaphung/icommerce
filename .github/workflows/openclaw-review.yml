@@ -1,4 +1,4 @@
-name: OpenClaw PR Review (Local)
+name: OpenClaw PR Review
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   review:
-    runs-on: self-hosted # <-- Điểm mấu chốt ở đây
+    runs-on: self-hosted
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -18,16 +18,14 @@ jobs:
         run: |
           PR_URL="${{ github.event.pull_request.html_url }}"
           
-          # Test in ra terminal xem openclaw trả về gì
           echo "Bắt đầu gọi openclaw..."
           OUTPUT=$(openclaw agent --message "Review PR này: $PR_URL")
           echo "Output nhận được là: $OUTPUT"
           
-          {
-            echo 'review_result<<EOF'
-            echo "$OUTPUT"
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
+          # Ghi multiline output an toàn bằng EOF thẳng hàng
+          echo "review_result<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Đăng comment kết quả lên PR
         uses: actions/github-script@v7
