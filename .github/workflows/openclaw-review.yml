@@ -21,11 +21,11 @@ jobs:
           # Chạy openclaw agent và gom toàn bộ kết quả trả về
           OUTPUT=$(openclaw agent --message "Vui lòng đọc code và review GitHub Pull Request này: $PR_URL. Chỉ đưa ra nhận xét chuyên môn.")
           
-          # Lưu output vào biến của GitHub Actions (xử lý an toàn với chuỗi xuống dòng)
-          delimiter="__EOF__"
-          echo "review_result<<$delimiter" >> $GITHUB_OUTPUT
-          echo "$OUTPUT" >> $delimiter
-          echo "$GITHUB_OUTPUT"
+          {
+            echo 'review_result<<EOF'
+            echo "$OUTPUT"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
 
       - name: Đăng comment kết quả lên PR
         uses: actions/github-script@v7
