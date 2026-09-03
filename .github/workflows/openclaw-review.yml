@@ -12,14 +12,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Chạy OpenClaw Review
+        id: openclaw-step
         env:
-          GITHUB_TOKEN: ${{ secrets.OPENCLAW_PAT }} 
-          # Không cần truyền LLM_API_KEY ở đây nữa, OpenClaw sẽ tự lấy từ máy bạn
+          GITHUB_TOKEN: ${{ secrets.OPENCLAW_PAT }}
         run: |
           PR_URL="${{ github.event.pull_request.html_url }}"
           
-          # Chạy openclaw agent và gom toàn bộ kết quả trả về
-          OUTPUT=$(openclaw agent --message "Vui lòng đọc code và review GitHub Pull Request này: $PR_URL. Chỉ đưa ra nhận xét chuyên môn.")
+          # Test in ra terminal xem openclaw trả về gì
+          echo "Bắt đầu gọi openclaw..."
+          OUTPUT=$(openclaw agent --message "Review PR này: $PR_URL")
+          echo "Output nhận được là: $OUTPUT"
           
           {
             echo 'review_result<<EOF'
