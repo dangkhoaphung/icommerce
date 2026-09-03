@@ -17,4 +17,5 @@ jobs:
           # Không cần truyền LLM_API_KEY ở đây nữa, OpenClaw sẽ tự lấy từ máy bạn
         run: |
           PR_URL="${{ github.event.pull_request.html_url }}"
-          openclaw review "$PR_URL"
+          # Dùng lệnh agent chạy ở chế độ local và truyền prompt yêu cầu review
+          openclaw agent --local --message "Vui lòng đọc code và review GitHub Pull Request này: $PR_URL"
