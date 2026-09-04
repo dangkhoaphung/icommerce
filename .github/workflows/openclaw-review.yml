@@ -8,9 +8,6 @@ jobs:
   review:
     runs-on: self-hosted
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
       - name: Chạy OpenClaw Review
         id: openclaw-step
         env:
