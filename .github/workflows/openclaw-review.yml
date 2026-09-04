@@ -29,10 +29,17 @@ jobs:
 
       - name: Đăng comment kết quả lên PR
         uses: actions/github-script@v7
+        env:
+          # Đưa kết quả của OpenClaw vào biến môi trường an toàn
+          REVIEW_OUTPUT: ${{ steps.openclaw-step.outputs.review_result }}
         with:
           github-token: ${{ secrets.OPENCLAW_PAT }}
           script: |
-            const reviewBody = `🤖 **OpenClaw PR Review:**\n\n${{ steps.openclaw-step.outputs.review_result }}`;
+            // Lọc và đọc an toàn từ biến môi trường, không sợ lỗi ký tự đặc biệt
+            const rawOutput = process.env.REVIEW_OUTPUT || "Không có nội dung trả về.";
+            
+            const reviewBody = `🤖 **OpenClaw PR Review:**\n\n${rawOutput}`;
+            
             await github.rest.issues.createComment({
               issue_number: context.payload.pull_request.number,
               owner: context.repo.owner,
