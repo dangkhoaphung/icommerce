@@ -1,0 +1,79 @@
+name: OpenClaw PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: self-hosted
+    steps:
+      - name: Chạy OpenClaw Review
+        id: openclaw-step
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENCLAW_PAT }}
+        run: |
+          PR_API_URL="${{ github.event.pull_request.url }}"
+          DIFF_CONTENT=$(curl -sL \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3.diff" \
+            "$PR_API_URL")
+          
+          SHORT_DIFF="${DIFF_CONTENT:0:5000}"
+          
+          # Ép AI trả về JSON thay vì text thuần
+          PROMPT="Review đoạn code diff sau. Tìm bug hoặc code smell. 
+          CHỈ trả về kết quả dưới dạng mảng JSON chứa các object có định dạng:
+          [{\"path\": \"tên_file_bị_lỗi\", \"line\": số_dòng_bị_lỗi, \"body\": \"nhận_xét_của_bạn\"}]
+          Tuyệt đối không giải thích gì thêm, chỉ in ra JSON.
+          Diff:
+          $SHORT_DIFF"
+          
+          OUTPUT=$(openclaw agent --message "$PROMPT")
+          
+          echo "review_result<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Đăng Inline Comment lên PR
+        uses: actions/github-script@v7
+        env:
+          REVIEW_OUTPUT: ${{ steps.openclaw-step.outputs.review_result }}
+        with:
+          github-token: ${{ secrets.OPENCLAW_PAT }}
+          script: |
+            const rawOutput = process.env.REVIEW_OUTPUT;
+            try {
+              // Dùng Regex bóc tách đúng mảng JSON phòng trường hợp AI nói nhảm thêm vài chữ
+              const jsonMatch = rawOutput.match(/\[.*\]/s);
+              if (!jsonMatch) throw new Error("AI không trả về đúng chuẩn JSON");
+              
+              const comments = JSON.parse(jsonMatch[0]);
+              
+              if (comments.length > 0) {
+                console.log("Tìm thấy " + comments.length + " vấn đề. Đang push lên GitHub...");
+                await github.rest.pulls.createReview({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  commit_id: context.payload.pull_request.head.sha,
+                  event: 'COMMENT',
+                  comments: comments
+                });
+              } else {
+                console.log("AI đánh giá code sạch, không có comment nào cần add.");
+              }
+            } catch (error) {
+              console.log("Có lỗi xảy ra khi parse JSON hoặc push comment:", error);
+              // Fallback: Nếu lỗi, đẩy text thông thường lên PR để bạn biết
+              await github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🤖 **OpenClaw (Raw Output):**\n\n${rawOutput}`
+              });
+            }
